@@ -113,7 +113,7 @@ export default function Home() {
       >
      
         <p className="text-gray-400 text-xs mt-1">
-          © {new Date().getFullYear()} Secret Admirer. All rights reserved.
+          © 2026 Secret Admirer. All rights reserved.
         </p>
       </motion.div>
     </div>
