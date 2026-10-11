@@ -310,9 +310,7 @@ export default function Dashboard() {
         transition={{ delay: 0.5 }}
         className="absolute bottom-4 left-0 w-full text-center z-10"
       >
-        <p className="text-gray-500 text-sm font-medium flex items-center justify-center gap-1">
-          Made with <Heart className="w-4 h-4 text-red-500 fill-red-500 animate-pulse" /> for ITUM IT Batch
-        </p>
+      
         <p className="text-gray-400 text-xs mt-1">
           © 2026 Secret Admirer. All rights reserved.
         </p>
