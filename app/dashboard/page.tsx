@@ -197,20 +197,26 @@ export default function Dashboard() {
 
               <div className="relative mb-6">
                 <select 
-                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-100 text-gray-900 font-bold bg-white appearance-none cursor-pointer transition-all"
+                  /* මෙතනට අලුතින් relative, z-10 සහ text-base (16px) එකතු කළා */
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-100 text-gray-900 text-base font-bold bg-white appearance-none cursor-pointer transition-all relative z-10"
                   onChange={(e) => setSelectedCrush(e.target.value)}
                   value={selectedCrush}
                 >
-                  <option value="" className="text-gray-400">✨ Select a batchmate...</option>
+                  {/* පලවෙනි option එකට disabled දැම්මා iPhone වලට ලේසි වෙන්න */}
+                  <option value="" disabled>✨ Select a batchmate...</option>
+                  
                   {students.map((student) => (
-                    <option key={student.student_id} value={student.student_id} className="text-gray-900 font-medium">
+                    <option key={student.student_id} value={student.student_id} className="text-gray-900 font-medium text-base">
                       {student.name}
                     </option>
                   ))}
                 </select>
-                {/* Custom dropdown arrow */}
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                
+                {/* ඊතලය select box එකට යටින් තියන්න z-0 දැම්මා */}
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500 z-0">
+                  <svg className="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                  </svg>
                 </div>
               </div>
 
@@ -301,7 +307,7 @@ export default function Dashboard() {
       >
      
         <p className="text-gray-400 text-xs mt-1">
-          © 2026 Secret Admirer. All rights reserved.
+          © 2026     Secret Admirer. All rights reserved.
         </p>
       </motion.div>
     </div>
