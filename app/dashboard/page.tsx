@@ -20,14 +20,22 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function loadData() {
-      const { data: { user } } = await supabase.auth.getUser();
+      // 1. Session එක තියෙනවද බලනවා
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       
+      if (!user || authError) {
+        setMessage('Your session has expired or you are not logged in. Please open in Safari/Chrome and log in again.');
+        setLoading(false);
+        return;
+      }
+
       if (user?.email) {
-        const { data: currentStudent } = await supabase
+        // maybeSingle() පාවිච්චි කරන්නේ ළමයා නැති වුණොත් error එකක් එන එක නවත්තන්න
+        const { data: currentStudent, error: studentError } = await supabase
           .from('students')
           .select('*')
           .eq('email', user.email)
-          .single();
+          .maybeSingle();
 
         if (currentStudent) {
           setCurrentUser(currentStudent);
@@ -40,13 +48,11 @@ export default function Dashboard() {
             
           setStudents(otherStudents || []);
 
-          // 1. My Crushes
           const { data: myCrushes } = await supabase
             .from('crushes')
             .select('target_id')
             .eq('chooser_id', currentStudent.student_id);
 
-          // 2. Secret Admirers
           const { data: crushesOnMe } = await supabase
             .from('crushes')
             .select('chooser_id')
@@ -55,7 +61,6 @@ export default function Dashboard() {
           const crushesOnMeIds = crushesOnMe?.map(c => c.chooser_id) || [];
           setAdmirersCount(crushesOnMeIds.length); 
 
-          // 3. Mutual Matches 
           const myCrushIds = myCrushes?.map(c => c.target_id) || [];
           const mutualIds = myCrushIds.filter(id => crushesOnMeIds.includes(id));
 
@@ -71,7 +76,7 @@ export default function Dashboard() {
             }
           }
         } else {
-          setMessage('Your account was not found in the batch list.');
+          setMessage('Your university email was not found in the batch list.');
         }
       }
       setLoading(false);
@@ -106,7 +111,6 @@ export default function Dashboard() {
     window.location.href = '/';
   };
 
-  // Stagger animation container
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -131,7 +135,6 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-100 p-4 md:p-8 relative overflow-hidden flex flex-col items-center">
       
-      {/* Mutual Match Popup */}
       <AnimatePresence>
         {showMatchPopup && (
           <motion.div 
@@ -173,7 +176,7 @@ export default function Dashboard() {
         className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10 pt-4"
       >
         
-        {/* Left Side: Send Interest */}
+        {/* Left Side: Send Interest or Error Message */}
         <motion.div variants={itemVariants} className="bg-white rounded-3xl shadow-xl p-8 border border-white/50">
           {currentUser ? (
             <>
@@ -197,26 +200,19 @@ export default function Dashboard() {
 
               <div className="relative mb-6">
                 <select 
-                  /* මෙතනට අලුතින් relative, z-10 සහ text-base (16px) එකතු කළා */
                   className="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-100 text-gray-900 text-base font-bold bg-white appearance-none cursor-pointer transition-all relative z-10"
                   onChange={(e) => setSelectedCrush(e.target.value)}
                   value={selectedCrush}
                 >
-                  {/* පලවෙනි option එකට disabled දැම්මා iPhone වලට ලේසි වෙන්න */}
                   <option value="" disabled>✨ Select a batchmate...</option>
-                  
                   {students.map((student) => (
                     <option key={student.student_id} value={student.student_id} className="text-gray-900 font-medium text-base">
                       {student.name}
                     </option>
                   ))}
                 </select>
-                
-                {/* ඊතලය select box එකට යටින් තියන්න z-0 දැම්මා */}
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500 z-0">
-                  <svg className="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                  </svg>
+                  <svg className="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                 </div>
               </div>
 
@@ -242,14 +238,24 @@ export default function Dashboard() {
               )}
             </>
           ) : (
-            <p className="text-red-500 font-bold text-center">{message}</p>
+            // ලොග් වෙලා නැති අයට පේන Error කොටස
+            <div className="text-center py-6">
+              <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-red-500 font-bold mb-6 text-lg px-4">
+                {message || "Authentication Error: Please log in again."}
+              </p>
+              <button
+                onClick={() => window.location.href = '/'}
+                className="bg-gray-900 text-white px-8 py-3 rounded-full font-bold hover:bg-gray-800 transition-colors shadow-md"
+              >
+                Go back to Login Page
+              </button>
+            </div>
           )}
         </motion.div>
 
         {/* Right Side: Stats */}
         <div className="space-y-6">
-          
-          {/* Secret Admirers Count Card */}
           <motion.div variants={itemVariants} className="bg-white rounded-3xl shadow-xl p-6 flex items-center gap-5 border-l-8 border-purple-500">
             <motion.div 
               animate={{ y: [0, -5, 0] }} 
@@ -268,7 +274,6 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          {/* Mutual Matches List Card */}
           <motion.div variants={itemVariants} className="bg-white rounded-3xl shadow-xl p-6 border-l-8 border-pink-500 min-h-[200px]">
             <div className="flex items-center gap-3 mb-6">
               <Sparkles className="text-pink-500 w-7 h-7" />
@@ -295,9 +300,9 @@ export default function Dashboard() {
               </div>
             )}
           </motion.div>
-
         </div>
       </motion.div>
+
       {/* Footer Section */}
       <motion.div 
         initial={{ opacity: 0 }}
@@ -305,9 +310,11 @@ export default function Dashboard() {
         transition={{ delay: 0.5 }}
         className="absolute bottom-4 left-0 w-full text-center z-10"
       >
-     
+        <p className="text-gray-500 text-sm font-medium flex items-center justify-center gap-1">
+          Made with <Heart className="w-4 h-4 text-red-500 fill-red-500 animate-pulse" /> for ITUM IT Batch
+        </p>
         <p className="text-gray-400 text-xs mt-1">
-          © 2026     Secret Admirer. All rights reserved.
+          © 2026 Secret Admirer. All rights reserved.
         </p>
       </motion.div>
     </div>
